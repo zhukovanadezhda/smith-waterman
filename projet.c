@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-
+ 
 #define NOM1_PAR_DEFAUT "seq1.txt"
 #define NOM2_PAR_DEFAUT "seq2.txt"
 
-
+ 
 /*
  * Function:  read_sequence 
  * ----------------------------------------
