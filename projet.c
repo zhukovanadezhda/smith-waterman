@@ -97,8 +97,8 @@ char *read_sequence(char *filename) {
  */
 int **read_substitution_matrix(char *filename){
     FILE *fr;
-    int n = 0, i = 0, j = 0;
-    char *blosum62[21][21], c;
+    int i = 0, j = 0, col = 0, row = 0, **blosum62 = NULL;
+    char c, line[1024];
     
     printf("\n");
 	
@@ -110,25 +110,49 @@ int **read_substitution_matrix(char *filename){
     	printf("Succesfully opened file %s\n", filename);
     }
     
-    while (fscanf(fr, "%c", &c) == '#') {
+    blosum62 = (int**) malloc(100 * sizeof(int*));
+    for (int i = 0; i < 100; i++) {
+        blosum62[i] = (int*) malloc(100 * sizeof(int));
+        }
+    
+    
+    if (fscanf(fr, "%c", &c) != EOF && c == '#') {
         while (fscanf(fr, "%c", &c) != EOF && c != '\n');
     }
 	
-    for (i = 0; i < 21; i++) {
-        for (j = 0; j < 21; j++) {
-            fscanf(fr, "%c", &c	);
-            if (c != ' '){
-            	blosum62[i][j] = c;
+	while (fscanf(fr, "%c", &c) != EOF && c != '\n');
+	
+	
+    row = 0;
+    while (fgets(line, 1024, fr) != NULL && row < 20) {
+        col = 0;
+        for (int i = 0; line[i] != '\0' && col < 20; i++) {
+            c = line[i];
+            if (c == '#') {
+                break;
+            } else if (c == ' ' || c == '\t') {
+                continue;
+            } else if (c >= 'A' && c <= 'Z' && col == 0) {
+                continue;
+            } else if (c >= 'A' && c <= 'Z' && col > 0) {
+                blosum62[row][col-1] = atoi(&line[i+1]);
+                col++;
+            } else if (c == '\n') {
+                continue;
+            } else {
+                blosum62[row][col] = atoi(&line[i]);
+                col++;
             }
         }
+        row++;
     }
     
     printf("Read substitution matrix from file %s\n", filename);
     printf("Substitution matrix: ");
     
-    for (i = 0; i < 21; i++) {
-    	for (i = 0; i < 21; i++) {
-        	printf("%c", blosum62[i][j]);
+    for (i = 0; i < 20; i++) {
+    	for (i = 0; i < 20; i++) {
+        	printf("%d", blosum62[i][j]);
         }
     }
     printf("\n");
@@ -142,33 +166,31 @@ int** initialize_matrix(int n, int m, int value){
     
     return 0;
 }
-
 int compute_score(char *a, char *b, int** substitution_matrix){
     
     return 0;
 }
-
-
 int calculate_alignment(char* seq1, char* seq2, int** substitution_matrix, int gap_penalty, int gap_extension, char** aligned_seq1, char** aligned_seq2){
     
     return 0;
 }
-
 void print_alignment(char* aligned_seq1, char* aligned_seq2){
     
     return 0;
 }*/
 
 int main() {
-	char *seq1, *seq2, *substitution_matrix;
+	//char *seq1, *seq2;
+	int **substitution_matrix;
 	
 	substitution_matrix = read_substitution_matrix("BLOSUM62.txt");
 	
-    seq1 = read_sequence(NOM1_PAR_DEFAUT);
-    seq2 = read_sequence(NOM2_PAR_DEFAUT);
+    //seq1 = read_sequence(NOM1_PAR_DEFAUT);
+    //seq2 = read_sequence(NOM2_PAR_DEFAUT);
     
-    free(seq1);
-    free(seq2);
+    //free(seq1);
+    //free(seq2);
+    free(substitution_matrix);
     
     return 0;
 }
