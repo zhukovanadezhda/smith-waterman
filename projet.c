@@ -43,7 +43,7 @@ int sequence_len(char *filename) {
             n++;
         }
     }
-    printf("Succesfully calculated the length of the sequence: %d amino acids\n", n);
+    printf("Calculated the length of the sequence: %d amino acids\n", n);
     return n;    
  
 }
@@ -198,6 +198,7 @@ int** read_substitution_matrix(char *filename) {
 }
 
 
+
 /*
  * Function:  initialize_matrix 
  * ----------------------------------------
@@ -217,17 +218,60 @@ int** read_substitution_matrix(char *filename) {
  *    matrix:  a pointer to the table of characters
  *     
  */
-int **initialize_matrix(int n, int m, int value){
+int **initialize_matrix(int n, int m, int value) {
+    // Allocate memory for the pointers to rows
+    int** matrix = (int**) malloc(n * sizeof(int*));
+    if (matrix == NULL) {
+        printf("Error: Failed to allocate memory for matrix rows.\n");
+        exit(1);
+    }
+
+    // Allocate memory for the matrix elements and initialize with value
+    for (int i = 0; i < n; i++) {
+        matrix[i] = (int*) malloc(m * sizeof(int));
+        if (matrix[i] == NULL) {
+            printf("Error: Failed to allocate memory for matrix elements.\n");
+            exit(1);
+        }
+        for (int j = 0; j < m; j++) {
+            matrix[i][j] = value;
+        }
+    }
     
-    return 0;
+    printf("\n");
+    printf("Succesfully initialized the matrix %d x %d with %d value \n", n, m, value);
+    return matrix;
 }
 
 
-/*
-int compute_score(char *a, char *b, int** substitution_matrix){
+
+int compute_score(char *a, char *b, int **substitution_matrix) {
+    // Define the order of amino acids
+    char amino_acids[] = "ARNDCQEGHILKMFPSTWYVBZX*";
     
-    return 0;
+    // Convert characters a and b to their serial numbers
+    int index_a = -1, index_b = -1;
+    for (int i = 0; i < 24; i++) {  
+        if (*a == amino_acids[i]) {
+            index_a = i;
+        }
+        if (*b == amino_acids[i]) {
+            index_b = i;
+        }
+    }
+    
+    // If a or b is not a standard amino acid, return an error code
+    if (index_a == -1 || index_b == -1) {
+        printf("Unexpected character in sequence");
+        return -1;
+    }
+    
+    // Access the score from the substitution matrix
+    int score = substitution_matrix[index_a][index_b];
+    
+    return score;
 }
+
 
 
 int calculate_alignment(char* seq1, char* seq2, int** substitution_matrix, int gap_penalty, int gap_extension, char** aligned_seq1, char** aligned_seq2){
@@ -235,6 +279,7 @@ int calculate_alignment(char* seq1, char* seq2, int** substitution_matrix, int g
     return 0;
 }
 
+/*
 void print_alignment(char* aligned_seq1, char* aligned_seq2){
     
     return 0;
@@ -242,12 +287,26 @@ void print_alignment(char* aligned_seq1, char* aligned_seq2){
 
 int main() {
 	char *seq1, *seq2;
-	int **substitution_matrix;
+	int n, m, **substitution_matrix, **matrix;
 	
     substitution_matrix = read_substitution_matrix("BLOSUM62.txt");
 	
     seq1 = read_sequence(NOM1_PAR_DEFAUT);
     seq2 = read_sequence(NOM2_PAR_DEFAUT);
+    
+    n = sequence_len(NOM1_PAR_DEFAUT);
+    m = sequence_len(NOM2_PAR_DEFAUT);
+    
+    matrix = initialize_matrix(n, m, 0);
+
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < m; j++) {
+            printf("%d ", matrix[i][j]);
+        }
+        printf("\n");
+    }
+    
+    printf("\n%d \n", compute_score("W","W",substitution_matrix));
     
     free(seq1);
     free(seq2);
