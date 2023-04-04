@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
- 
+#include <string.h>
+
+#define MAX_LINE_LENGTH 1000
+#define MATRIX_SIZE 24
+
 #define NOM1_PAR_DEFAUT "seq1.txt"
 #define NOM2_PAR_DEFAUT "seq2.txt"
     
@@ -95,101 +98,107 @@ char *read_sequence(char *filename) {
  *     The pointer to the table of characters with the  
  *     protein sequence.
  */
-int **read_substitution_matrix(char *filename){
-    FILE *fr;
-    int i = 0, j = 0, col = 0, row = 0, **blosum62 = NULL;
-    char c, line[1024];
+int** read_substitution_matrix(char *filename) {
+    FILE *file;
+    char line[MAX_LINE_LENGTH];
+    int row = 0, col = 0, value;
+    int **matrix;
     
     printf("\n");
-	
-    fr = fopen(filename, "r");
-    if (fr == NULL) {
+
+    // memory allocation
+
+    matrix = (int **)malloc(MATRIX_SIZE * sizeof(int *));
+    for (int i = 0; i < MATRIX_SIZE; i++) {
+        matrix[i] = (int *)malloc(MATRIX_SIZE * sizeof(int));
+    }
+
+    // file opening
+
+    file = fopen(filename, "r");
+    if (file == NULL) {
         perror("Error opening file");
         exit(1);
     } else {
-    	printf("Succesfully opened file %s\n", filename);
+        printf("Successfully opened file %s\n", filename);
     }
-    
-    blosum62 = (int**) malloc(100 * sizeof(int*));
-    for (int i = 0; i < 100; i++) {
-        blosum62[i] = (int*) malloc(100 * sizeof(int));
+
+    // skipping useless lines
+
+    while (fgets(line, MAX_LINE_LENGTH, file)) {
+        if (line[0] == '#' || line[0] == '\n') {
+            continue; // skip comments and empty lines
         }
-    
-    
-    if (fscanf(fr, "%c", &c) != EOF && c == '#') {
-        while (fscanf(fr, "%c", &c) != EOF && c != '\n');
-    }
-	
-	while (fscanf(fr, "%c", &c) != EOF && c != '\n');
-	
-	
-    row = 0;
-    while (fgets(line, 1024, fr) != NULL && row < 20) {
-        col = 0;
-        for (int i = 0; line[i] != '\0' && col < 20; i++) {
-            c = line[i];
-            if (c == '#') {
-                break;
-            } else if (c == ' ' || c == '\t') {
-                continue;
-            } else if (c >= 'A' && c <= 'Z' && col == 0) {
-                continue;
-            } else if (c >= 'A' && c <= 'Z' && col > 0) {
-                blosum62[row][col-1] = atoi(&line[i+1]);
+        if (row > MATRIX_SIZE) {
+            break; // reached the end of the matrix
+        }
+        col = 0; // reset column counter for each row
+        char *token = strtok(line, " ");
+        while (token != NULL) {
+            if (col == 0) {
                 col++;
-            } else if (c == '\n') {
-                continue;
-            } else {
-                blosum62[row][col] = atoi(&line[i]);
-                col++;
+                token = strtok(NULL, " ");
+                continue; // skip first column
             }
+            sscanf(token, "%d", &value);
+            if (row != 0) { // skip first row
+                matrix[row - 1][col - 1] = value;
+            }
+            col++;
+            token = strtok(NULL, " ");
         }
         row++;
     }
+
+    fclose(file);
     
     printf("Read substitution matrix from file %s\n", filename);
-    printf("Substitution matrix: ");
+    printf("Substitution matrix:\n");
     
-    for (i = 0; i < 20; i++) {
-    	for (i = 0; i < 20; i++) {
-        	printf("%d", blosum62[i][j]);
+    for (int i = 0; i < 24; i++) {
+        for (int j = 0; j < 24; j++) {
+            printf("%d ", matrix[i][j]);
         }
+        printf("\n");
     }
-    printf("\n");
-
-    fclose(fr);
     
-    return blosum62;
+    return matrix;
 }
+
+
 /*
 int** initialize_matrix(int n, int m, int value){
     
     return 0;
 }
+
 int compute_score(char *a, char *b, int** substitution_matrix){
     
     return 0;
 }
+
+
 int calculate_alignment(char* seq1, char* seq2, int** substitution_matrix, int gap_penalty, int gap_extension, char** aligned_seq1, char** aligned_seq2){
     
     return 0;
 }
+
 void print_alignment(char* aligned_seq1, char* aligned_seq2){
     
     return 0;
 }*/
 
 int main() {
-	//char *seq1, *seq2;
+	char *seq1, *seq2;
 	int **substitution_matrix;
 	
-	substitution_matrix = read_substitution_matrix("BLOSUM62.txt");
+    substitution_matrix = read_substitution_matrix("BLOSUM62.txt");
 	
-    //seq1 = read_sequence(NOM1_PAR_DEFAUT);
-    //seq2 = read_sequence(NOM2_PAR_DEFAUT);
+    seq1 = read_sequence(NOM1_PAR_DEFAUT);
+    seq2 = read_sequence(NOM2_PAR_DEFAUT);
     
-    //free(seq1);
-    //free(seq2);
+    free(seq1);
+    free(seq2);
     free(substitution_matrix);
     
     return 0;
