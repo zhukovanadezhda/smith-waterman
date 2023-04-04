@@ -273,11 +273,100 @@ int compute_score(char *a, char *b, int **substitution_matrix) {
 }
 
 
-
-int calculate_alignment(char* seq1, char* seq2, int** substitution_matrix, int gap_penalty, int gap_extension, char** aligned_seq1, char** aligned_seq2){
-    
-    return 0;
+// Function to find the maximum of two integers
+int max(int a, int b) {
+    return (a > b) ? a : b;
 }
+
+
+int calculate_alignment(char *seq1, char *seq2, int **substitution_matrix, int gap_penalty, char **aligned_seq1, char **aligned_seq2) {
+
+    // Get the lengths of the input sequences
+    int len_seq1 = sequence_len(NOM1_PAR_DEFAUT);
+    int len_seq2 = sequence_len(NOM2_PAR_DEFAUT);
+    
+
+    // Initialize the scoring matrix
+    int **score_matrix = initialize_matrix(len_seq1, len_seq2, 0);
+    
+    
+    // Fill the scoring matrix using the substitution matrix and gap penalty
+    int max_score = 0;
+    int max_i = 0;
+    int max_j = 0;
+    for (int i = 1; i <= len_seq1; i++) {
+        for (int j = 1; j <= len_seq2; j++) {
+            int match = score_matrix[i - 1][j - 1] + substitution_matrix[seq1[i - 1] - 'A'][seq2[j - 1] - 'A'];
+            int delete = score_matrix[i - 1][j] + gap_penalty;
+            int insert = score_matrix[i][j - 1] + gap_penalty;
+            score_matrix[i][j] = max(0, max(match, max(delete, insert)));
+            if (score_matrix[i][j] > max_score) {
+                max_score = score_matrix[i][j];
+                max_i = i;
+                max_j = j;
+            }
+        }
+    }
+
+    // Traceback to find the aligned sequences
+    *aligned_seq1 = (char*)malloc((max_i + max_j) * sizeof(char));
+    *aligned_seq2 = (char*)malloc((max_i + max_j) * sizeof(char));
+    int aligned_i = max_i;
+    int aligned_j = max_j;
+    int aligned_len = 0;
+    while (aligned_i > 0 && aligned_j > 0 && score_matrix[aligned_i][aligned_j] > 0) {
+        int current_score = score_matrix[aligned_i][aligned_j];
+        int diagonal_score = score_matrix[aligned_i - 1][aligned_j - 1];
+        int up_score = score_matrix[aligned_i - 1][aligned_j];
+        int left_score = score_matrix[aligned_i][aligned_j - 1];
+        if (current_score == diagonal_score + substitution_matrix[seq1[aligned_i - 1] - 'A'][seq2[aligned_j - 1] - 'A']) {
+            (*aligned_seq1)[aligned_len] = seq1[aligned_i - 1];
+            (*aligned_seq2)[aligned_len] = seq2[aligned_j - 1];
+            aligned_i--;
+            aligned_j--;
+        } else if (current_score == up_score + gap_penalty) {
+            (*aligned_seq1)[aligned_len] = seq1[aligned_i - 1];
+            (*aligned_seq2)[aligned_len] = '-';
+            aligned_i--;
+        } else {
+            (*aligned_seq1)[aligned_len] = '-';
+            (*aligned_seq2)[aligned_len] = seq2[aligned_j - 1];
+            aligned_j--;
+        }
+        aligned_len++;
+    }
+
+    // Reverse the aligned sequences
+    for (int k = 0; k < aligned_len / 2; k++) {
+        char temp = (*aligned_seq1)[k];
+        (*aligned_seq1)[k] = (*aligned_seq1)[aligned_len - 1];
+        (*aligned_seq1)[aligned_len - 1 - k] = temp;
+        temp = (*aligned_seq2)[k];
+        (*aligned_seq2)[k] = (*aligned_seq2)[aligned_len - 1 - k];
+        (*aligned_seq2)[aligned_len - 1 - k] = temp;
+    }
+
+    (*aligned_seq1)[aligned_len] = '\0'; 
+    (*aligned_seq2)[aligned_len] = '\0';
+    
+    for (int i = 0; i < len_seq1; i++) {
+        for (int j = 0; j < len_seq2; j++) {
+            printf("%d ", score_matrix[i][j]);
+        }
+        printf("\n");
+    }
+
+    /*
+    // Free the memory allocated for the scoring matrix
+    for (int i = 0; i <= len_seq1; i++) {
+        free(scores[i]);
+    }
+    free(scores);*/
+
+    return max_score; 
+}
+
+
 
 /*
 void print_alignment(char* aligned_seq1, char* aligned_seq2){
@@ -286,7 +375,7 @@ void print_alignment(char* aligned_seq1, char* aligned_seq2){
 }*/
 
 int main() {
-	char *seq1, *seq2;
+	char *seq1, *seq2, **aligned_seq1, **aligned_seq2;
 	int n, m, **substitution_matrix, **matrix;
 	
     substitution_matrix = read_substitution_matrix("BLOSUM62.txt");
@@ -307,6 +396,8 @@ int main() {
     }
     
     printf("\n%d \n", compute_score("W","W",substitution_matrix));
+    
+    printf("\n%d \n",calculate_alignment(seq1, seq2, substitution_matrix, -1, aligned_seq1, aligned_seq2));
     
     free(seq1);
     free(seq2);
