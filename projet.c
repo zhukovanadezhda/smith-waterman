@@ -8,7 +8,45 @@
 #define NOM1_PAR_DEFAUT "seq1.txt"
 #define NOM2_PAR_DEFAUT "seq2.txt"
     
+/*
+ * Function:  sequence_len
+ * ----------------------------------------
+ *   Calculates a protein sequence's length from a fasta file
+ *
+ *   Parameters:
+ *   
+ *     filename: a line of charecters representing the 
+ *				 fasta file name 
+ *
+ * 	 Returns:
+ *     
+ *     n:        an integer representing the sequence length
+ *     
+ */
+int sequence_len(char *filename) { 
+    FILE *fr;
+    int n = 0;
+    char c;
+	
+    fr = fopen(filename, "r");
+    if (fr == NULL) {
+        perror("Error opening file");
+        exit(1);
+    }
+    
+    while (fscanf(fr, "%c", &c) != EOF) {
+        if (c == '>') {
+            while (fscanf(fr, "%c", &c) != EOF && c != '\n') {
+            }
+        }
+        else {
+            n++;
+        }
+    }
+    printf("Succesfully calculated the length of the sequence: %d amino acids\n", n);
+    return n;    
  
+}
 /*
  * Function:  read_sequence 
  * ----------------------------------------
@@ -16,13 +54,14 @@
  *
  *   Parameters:
  *   
- *     filename: the line of charecters representing the 
+ *     filename: a line of charecters representing the 
  *				 fasta file name 
  *
  * 	 Returns:
  *     
- *     The pointer to the table of characters with the protein 
- *     sequence.
+ *     t:        a pointer to the table of characters with 
+ *               the protein sequence.
+ *     
  */
 char *read_sequence(char *filename) {
     FILE *fr;
@@ -36,18 +75,10 @@ char *read_sequence(char *filename) {
         perror("Error opening file");
         exit(1);
     } else {
-    	printf("Succesfully opened file %s\n", filename);
+    	printf("Succesfully opened the file %s\n", filename);
     }
 
-    while (fscanf(fr, "%c", &c) != EOF) {
-        if (c == '>') {
-            while (fscanf(fr, "%c", &c) != EOF && c != '\n') {
-            }
-        }
-        else {
-            n++;
-        }
-    }
+    n = sequence_len(filename);
 
     t = malloc(n * sizeof(char));
     if (t == NULL) {
@@ -69,8 +100,8 @@ char *read_sequence(char *filename) {
         }
     }
     
-    printf("Read %d characters from file %s\n", n, filename);
-    printf("DNA sequence: ");
+    printf("Read %d amino acids from the file %s\n", n, filename);
+    printf("Protein sequence: ");
     
     for (i = 0; i < n; i++) {
         printf("%c", t[i]);
@@ -90,13 +121,14 @@ char *read_sequence(char *filename) {
  *
  *   Parameters:
  *   
- *     filename: the line of charecters representing  
- *				 the file name 
+ *      filename: a line of charecters representing  
+ *				  the file name 
  *
- * 	 Returns:
+ *   Returns:
  *     
- *     The pointer to the table of characters with the  
- *     protein sequence.
+ *      matrix:   a pointer to the table of characters 
+ *                with the protein sequence.
+ *     
  */
 int** read_substitution_matrix(char *filename) {
     FILE *file;
@@ -167,11 +199,31 @@ int** read_substitution_matrix(char *filename) {
 
 
 /*
-int** initialize_matrix(int n, int m, int value){
+ * Function:  initialize_matrix 
+ * ----------------------------------------
+ *   Initialize a matrix 
+ *
+ *   Parameters:
+ *   
+ *          n: an integer representing the number of 
+               rows of the matrix
+            m: an integer representing the number of 
+               columns of the matrix
+        value: an integer representing the initial 
+               value of the matrix
+ *
+ *   Returns:
+ *     
+ *    matrix:  a pointer to the table of characters
+ *     
+ */
+int **initialize_matrix(int n, int m, int value){
     
     return 0;
 }
 
+
+/*
 int compute_score(char *a, char *b, int** substitution_matrix){
     
     return 0;
