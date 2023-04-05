@@ -29,7 +29,7 @@ int sequence_len(char *filename) {
 	
     fr = fopen(filename, "r");
     if (fr == NULL) {
-        perror("Error: cannot open file");
+        perror("Error: cannot open file\n");
         exit(1);
     }
     
@@ -75,7 +75,7 @@ char *read_sequence(char *filename) {
 	
     fr = fopen(filename, "r");
     if (fr == NULL) {
-        perror("Error: cannot open file");
+        perror("Error: cannot open file\n");
         exit(1);
     } else {
     	printf("Succesfully opened the file %s\n", filename);
@@ -87,7 +87,7 @@ char *read_sequence(char *filename) {
     // Allocate memory for the protein sequence
     t = malloc((n+1) * sizeof(char));
     if (t == NULL) {
-        perror("Error: cannot allocate memory");
+        perror("Error: cannot allocate memory\n");
         exit(1);
     }
 
@@ -108,7 +108,7 @@ char *read_sequence(char *filename) {
         }
     }
     
-    t[n] = '\0'; // Add a null terminator to the end of the sequence
+    t[n] = '\0'; // add the end of the sequence
     printf("Read %d amino acids from the file %s\n", n, filename);  
     printf("Protein sequence: %s\n", t);
 
@@ -153,7 +153,7 @@ int **read_substitution_matrix(char *filename) {
 
     file = fopen(filename, "r");
     if (file == NULL) {
-        perror("Error: cannot open file");
+        perror("Error: cannot open file\n");
         exit(1);
     } else {
         printf("Successfully opened the file %s\n", filename);
@@ -189,14 +189,14 @@ int **read_substitution_matrix(char *filename) {
     fclose(file);
     
     printf("Read substitution matrix from the file %s\n", filename);
-    printf("Substitution matrix:\n");
+    //printf("Substitution matrix:\n");
     
-    for (int i = 0; i < 24; i++) {
+    /*for (int i = 0; i < 24; i++) {
         for (int j = 0; j < 24; j++) {
             printf("%d ", matrix[i][j]);
         }
         printf("\n");
-    }
+    }*/
     
     return matrix;
 }
@@ -241,8 +241,7 @@ int **initialize_matrix(int n, int m, int value) {
             matrix[i][j] = value;
         }
     }
-    
-    printf("\n");
+ 
     printf("Succesfully initialized the matrix %d x %d with %d value \n", n, m, value);
     return matrix;
 }
@@ -305,13 +304,13 @@ int **fill_matrix(char *seq1, char *seq2, int **substitution_matrix, int gap_pen
             score_matrix[i][j] = max_score;
         }
     }
-    printf("\nSuccesfully calculated the score matrix :\n");
-    for (int i = 0; i <= len1; i++) {
+    printf("Succesfully calculated the score matrix %d x %d \n", len1 + 1, len2 + 1);
+    /*for (int i = 0; i <= len1; i++) {
         for (int j = 0; j <= len2; j++) {
             printf("%d ", score_matrix[i][j]);
         }
         printf("\n");
-    }
+    }*/
     return score_matrix;
 }
 
@@ -322,6 +321,8 @@ int calculate_alignment(char *seq1, char *seq2, int **substitution_matrix,
     int m = strlen(seq1);
     int n = strlen(seq2);
     int **score_matrix;
+    printf("\nCalculating alignment score \n");
+    
 
     // fill the score matrix 
     score_matrix = fill_matrix(seq1, seq2, substitution_matrix, gap_penalty);
@@ -340,7 +341,6 @@ int calculate_alignment(char *seq1, char *seq2, int **substitution_matrix,
         }
     }
     
-	printf("\nScore:%d\nPosition:%d,%d\n\n", max_score, max_i, max_j);
 
     // backtrack from the maximum score to build the aligned sequences
     char* align1 = (char*) malloc((m+n) * sizeof(char));
@@ -369,6 +369,8 @@ int calculate_alignment(char *seq1, char *seq2, int **substitution_matrix,
         }
         k++;
     }
+    printf("Alignment score is calculated\n");
+    printf("Alignment score: %d\nStart position: %d, %d\nEnd position: %d, %d\n", max_score, i, j, max_i, max_j);
 
     // reverse the aligned sequences
     for (i = 0; i < k/2; i++) {
@@ -395,17 +397,52 @@ int calculate_alignment(char *seq1, char *seq2, int **substitution_matrix,
     return max_score;
 }
 
-           
-int main() {
+void print_seq(char* seq1, char* seq2) {
+    int len1 = strlen(seq1);
+    int len2 = strlen(seq2);
+    int i = 0, j = 0;
+    while (i < len1 || j < len2) {
+        for (int k = 0; k < 60; k++) {
+            if (i + k < len1) {
+                printf("%c", seq1[i+k]);
+            } else {
+                break;
+            }
+        }
+        printf("\n");
+        for (int k = 0; k < 60; k++) {
+            if (j + k < len2) {
+                printf("%c", seq2[j+k]);
+            } else {
+                break;
+            }
+        }
+        printf("\n\n");
+        i += 60;
+        j += 60;
+    }
+}
+
+       
+int main(int argc, char *argv[]) {
+
+    if (argc != 3) {
+        printf("Error: 2 files required\n");
+        return 1;
+    }
+    
+    char *input_file1 = argv[1];
+    char *input_file2 = argv[2];
+
     char *seq1, *seq2;
     char *aligned_seq1;
     char *aligned_seq2;
     int **substitution_matrix;
-    int gap_penalty = -2;
+    int gap_penalty = -5;
 
     // Read sequences and substitution matrix from files
-    seq1 = read_sequence("seq1.txt");
-    seq2 = read_sequence("seq2.txt");
+    seq1 = read_sequence(input_file1);
+    seq2 = read_sequence(input_file2);
     substitution_matrix = read_substitution_matrix("BLOSUM62.txt");
     
     // Allocate memory for aligned_seq1 and aligned_seq2
@@ -413,10 +450,10 @@ int main() {
     aligned_seq2 = (char*) malloc((strlen(seq1) + strlen(seq2) + 1) * sizeof(char));
 
     int score = calculate_alignment(seq1, seq2, substitution_matrix, gap_penalty, &aligned_seq1, &aligned_seq2);
+
+    printf("\nAlignment: \n\n");
     
-    printf("\n");
-    printf("Alignment score: %d\n", score);
-    printf("Alignment:\n%s\n%s\n", aligned_seq1, aligned_seq2);
+    print_seq(aligned_seq1, aligned_seq2);
 
     // Free memory    
     free(seq1);
