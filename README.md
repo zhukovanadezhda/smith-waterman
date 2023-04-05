@@ -29,3 +29,7 @@ gcc -Wall projet.c -o pro ; ./pro <filename1> <filename2>
 `
 
 Where `<filename1>` and `<filename2>` are the .fasta files with sequences. Each file should include only one sequence.
+
+To test the program two web resources were used. One for the short examples with visualisation of the score matrix and another one is a real Smith–Waterman algorithm from EMBOSS to aligne real sequences.
+[Short alignments (<10)](https://gtuckerkellogg.github.io/pairwise/demo/)
+[Real alignments](https://www.ebi.ac.uk/Tools/psa/emboss_water/)
