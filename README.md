@@ -24,7 +24,7 @@ In this project the Smith–Waterman algorithm was performed in C language.
 
 To test the algorithm:
 
-'''
+'''bash
 gcc -Wall projet.c -o pro ; ./pro <filename1> <filename2>
 '''
 
