@@ -6,9 +6,6 @@
 #define MAX_LINE_LENGTH 1000
 #define MATRIX_SIZE 24
 
-#define NOM1_PAR_DEFAUT "seq1.txt"
-#define NOM2_PAR_DEFAUT "seq2.txt"
-
     
 /*
  * Function:  sequence_len
@@ -25,7 +22,6 @@
  *     n:        an integer representing the sequence length
  *     
  */
-
 int sequence_len(char *filename) { 
     FILE *fr;
     int n = 0;
@@ -268,7 +264,7 @@ int compute_score(char *a, char *b, int **substitution_matrix) {
         }
     }
     
-    // If a or b is not a standard amino acid, return an error code
+    // If a or b is not a standard amino acid, return an error 
     if (index_a == -1 || index_b == -1) {
         printf("\nError: Unexpected character in the sequence\n");
         return -1;
@@ -287,10 +283,10 @@ int **fill_matrix(char *seq1, char *seq2, int **substitution_matrix, int gap_pen
     int len1 = strlen(seq1);
     int len2 = strlen(seq2);
 
-    // Initialize score matrix
+    // Initialize the score matrix
     int **score_matrix = initialize_matrix(len1 + 1, len2 + 1, 0);
 
-    // Fill score matrix
+    // Fill the score matrix
     int i, j, max_score;
     for (i = 1; i <= len1; i++) {
         for (j = 1; j <= len2; j++) {
@@ -305,7 +301,7 @@ int **fill_matrix(char *seq1, char *seq2, int **substitution_matrix, int gap_pen
             if (insert_score > max_score) max_score = insert_score;
             if (max_score < 0) max_score = 0;
             
-            // Update score matrix
+            // Update the score matrix
             score_matrix[i][j] = max_score;
         }
     }
@@ -320,17 +316,90 @@ int **fill_matrix(char *seq1, char *seq2, int **substitution_matrix, int gap_pen
 }
 
 
+int calculate_alignment(char *seq1, char *seq2, int **substitution_matrix,
+                         int gap_penalty, char **aligned_seq1, char **aligned_seq2) {
+    int i, j;
+    int m = strlen(seq1);
+    int n = strlen(seq2);
+    int **score_matrix;
 
+    // fill the score matrix 
+    score_matrix = fill_matrix(seq1, seq2, substitution_matrix, gap_penalty);
 
-/*
-void print_alignment(char* aligned_seq1, char* aligned_seq2){
+    // find the maximum score and its position in the score matrix
+    int max_score = 0;
+    int max_i = 0;
+    int max_j = 0;
+    for (i = 1; i <= m; i++) {
+        for (j = 1; j <= n; j++) {
+            if (score_matrix[i][j] > max_score) {
+                max_score = score_matrix[i][j]; // alignment score
+                max_i = i; //start position
+                max_j = j; //start position
+            }
+        }
+    }
     
-    return 0;
-}*/
+	printf("\nScore:%d\nPosition:%d,%d\n\n", max_score, max_i, max_j);
+
+    // backtrack from the maximum score to build the aligned sequences
+    char* align1 = (char*) malloc((m+n) * sizeof(char));
+    char* align2 = (char*) malloc((m+n) * sizeof(char));
+    int k = 0;
+    i = max_i; // set stat position
+    j = max_j;
+    // from the stat position till the first 0
+    while (score_matrix[i][j] != 0) {
+        // if we came from the top left (diagonal) 
+        if (score_matrix[i-1][j-1] + compute_score(&seq1[i-1], &seq2[j-1], substitution_matrix) == score_matrix[i][j]) {
+            align1[k] = seq1[i-1];
+            align2[k] = seq2[j-1];
+            i--;
+            j--;
+        // if we came from the top 
+        } else if (score_matrix[i-1][j] + gap_penalty == score_matrix[i][j]) {
+            align1[k] = seq1[i-1];
+            align2[k] = '-';
+            i--;
+        // if we came from the left 
+        } else {
+            align1[k] = '-';
+            align2[k] = seq2[j-1];
+            j--;
+        }
+        k++;
+    }
+
+    // reverse the aligned sequences
+    for (i = 0; i < k/2; i++) {
+        char tmp = align1[i];
+        align1[i] = align1[k-1-i];
+        align1[k-1-i] = tmp;
+        tmp = align2[i];
+        align2[i] = align2[k-1-i];
+        align2[k-1-i] = tmp;
+    }
+
+    // assign the aligned sequences to the output parameters
+    strncpy(*aligned_seq1, align1, k);
+    (*aligned_seq1)[k] = '\0';
+
+    strncpy(*aligned_seq2, align2, k);
+    (*aligned_seq2)[k] = '\0';
+
+    free(align1);
+    free(align2);
+    free(score_matrix[0]);
+    free(score_matrix);
+
+    return max_score;
+}
 
            
 int main() {
     char *seq1, *seq2;
+    char *aligned_seq1;
+    char *aligned_seq2;
     int **substitution_matrix;
     int gap_penalty = -2;
 
@@ -339,20 +408,28 @@ int main() {
     seq2 = read_sequence("seq2.txt");
     substitution_matrix = read_substitution_matrix("BLOSUM62.txt");
     
+    // Allocate memory for aligned_seq1 and aligned_seq2
+    aligned_seq1 = (char*) malloc((strlen(seq1) + strlen(seq2) + 1) * sizeof(char));
+    aligned_seq2 = (char*) malloc((strlen(seq1) + strlen(seq2) + 1) * sizeof(char));
 
-    // Fill score matrix using Smith-Waterman algorithm
-    int **score_matrix = fill_matrix(seq1, seq2, substitution_matrix, gap_penalty);
+    int score = calculate_alignment(seq1, seq2, substitution_matrix, gap_penalty, &aligned_seq1, &aligned_seq2);
+    
+    printf("\n");
+    printf("Alignment score: %d\n", score);
+    printf("Alignment:\n%s\n%s\n", aligned_seq1, aligned_seq2);
 
-
-
-    // Free memory
+    // Free memory    
     free(seq1);
     free(seq2);
     free(substitution_matrix[0]);
     free(substitution_matrix);
-    free(score_matrix[0]);
-    free(score_matrix);
-
+    free(aligned_seq1);
+    free(aligned_seq2);
+    
     return 0;
 }
+
+
+
+
 
