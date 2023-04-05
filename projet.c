@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #define MAX_LINE_LENGTH 1000
 #define MATRIX_SIZE 24
 
 #define NOM1_PAR_DEFAUT "seq1.txt"
 #define NOM2_PAR_DEFAUT "seq2.txt"
+
     
 /*
  * Function:  sequence_len
@@ -23,6 +25,7 @@
  *     n:        an integer representing the sequence length
  *     
  */
+
 int sequence_len(char *filename) { 
     FILE *fr;
     int n = 0;
@@ -30,7 +33,7 @@ int sequence_len(char *filename) {
 	
     fr = fopen(filename, "r");
     if (fr == NULL) {
-        perror("Error opening file");
+        perror("Error: cannot open file");
         exit(1);
     }
     
@@ -40,13 +43,17 @@ int sequence_len(char *filename) {
             }
         }
         else {
-            n++;
+            if (isalpha(c)) { // Only count non-newline characters as amino acids
+                n++;
+            }
         }
     }
+
     printf("Calculated the length of the sequence: %d amino acids\n", n);
+    fclose(fr);
     return n;    
- 
 }
+
 /*
  * Function:  read_sequence 
  * ----------------------------------------
@@ -72,41 +79,42 @@ char *read_sequence(char *filename) {
 	
     fr = fopen(filename, "r");
     if (fr == NULL) {
-        perror("Error opening file");
+        perror("Error: cannot open file");
         exit(1);
     } else {
     	printf("Succesfully opened the file %s\n", filename);
     }
 
+    // Determine the length of the protein sequence
     n = sequence_len(filename);
 
-    t = malloc(n * sizeof(char));
+    // Allocate memory for the protein sequence
+    t = malloc((n+1) * sizeof(char));
     if (t == NULL) {
-        perror("Error allocating memory");
+        perror("Error: cannot allocate memory");
         exit(1);
     }
 
+    // Reset the file pointer and read the protein sequence
     rewind(fr);
 
-    i = 0;
     while (fscanf(fr, "%c", &c) != EOF) {
         if (c == '>') {
+            // Skip the header line
             while (fscanf(fr, "%c", &c) != EOF && c != '\n') {
             }
         }
         else {
-            t[i] = c;
-            i++;
+            if (isalpha(c)) { // Only store non-newline characters as amino acids
+                t[i] = c;
+                i++;
+            }
         }
     }
     
-    printf("Read %d amino acids from the file %s\n", n, filename);
-    printf("Protein sequence: ");
-    
-    for (i = 0; i < n; i++) {
-        printf("%c", t[i]);
-    }
-    printf("\n");
+    t[n] = '\0'; // Add a null terminator to the end of the sequence
+    printf("Read %d amino acids from the file %s\n", n, filename);  
+    printf("Protein sequence: %s\n", t);
 
     fclose(fr);
 
@@ -130,7 +138,7 @@ char *read_sequence(char *filename) {
  *                with the protein sequence.
  *     
  */
-int** read_substitution_matrix(char *filename) {
+int **read_substitution_matrix(char *filename) {
     FILE *file;
     char line[MAX_LINE_LENGTH];
     int row = 0, col = 0, value;
@@ -149,10 +157,10 @@ int** read_substitution_matrix(char *filename) {
 
     file = fopen(filename, "r");
     if (file == NULL) {
-        perror("Error opening file");
+        perror("Error: cannot open file");
         exit(1);
     } else {
-        printf("Successfully opened file %s\n", filename);
+        printf("Successfully opened the file %s\n", filename);
     }
 
     // skipping useless lines
@@ -184,7 +192,7 @@ int** read_substitution_matrix(char *filename) {
 
     fclose(file);
     
-    printf("Read substitution matrix from file %s\n", filename);
+    printf("Read substitution matrix from the file %s\n", filename);
     printf("Substitution matrix:\n");
     
     for (int i = 0; i < 24; i++) {
@@ -222,7 +230,7 @@ int **initialize_matrix(int n, int m, int value) {
     // Allocate memory for the pointers to rows
     int** matrix = (int**) malloc(n * sizeof(int*));
     if (matrix == NULL) {
-        printf("Error: Failed to allocate memory for matrix rows.\n");
+        printf("Error: Failed to allocate memory for matrix rows\n");
         exit(1);
     }
 
@@ -230,7 +238,7 @@ int **initialize_matrix(int n, int m, int value) {
     for (int i = 0; i < n; i++) {
         matrix[i] = (int*) malloc(m * sizeof(int));
         if (matrix[i] == NULL) {
-            printf("Error: Failed to allocate memory for matrix elements.\n");
+            printf("Error: Failed to allocate memory for matrix elements\n");
             exit(1);
         }
         for (int j = 0; j < m; j++) {
@@ -262,7 +270,7 @@ int compute_score(char *a, char *b, int **substitution_matrix) {
     
     // If a or b is not a standard amino acid, return an error code
     if (index_a == -1 || index_b == -1) {
-        printf("Unexpected character in sequence");
+        printf("\nError: Unexpected character in the sequence\n");
         return -1;
     }
     
@@ -273,98 +281,44 @@ int compute_score(char *a, char *b, int **substitution_matrix) {
 }
 
 
-// Function to find the maximum of two integers
-int max(int a, int b) {
-    return (a > b) ? a : b;
-}
+int **fill_matrix(char *seq1, char *seq2, int **substitution_matrix, int gap_penalty) {
+  
+    // Get sequence lengths
+    int len1 = strlen(seq1);
+    int len2 = strlen(seq2);
 
+    // Initialize score matrix
+    int **score_matrix = initialize_matrix(len1 + 1, len2 + 1, 0);
 
-int calculate_alignment(char *seq1, char *seq2, int **substitution_matrix, int gap_penalty, char **aligned_seq1, char **aligned_seq2) {
+    // Fill score matrix
+    int i, j, max_score;
+    for (i = 1; i <= len1; i++) {
+        for (j = 1; j <= len2; j++) {
+            // Compute score for each possible path
+            int match_score = score_matrix[i-1][j-1] + compute_score(&seq1[i-1], &seq2[j-1], substitution_matrix);
+            int delete_score = score_matrix[i-1][j] + gap_penalty;
+            int insert_score = score_matrix[i][j-1] + gap_penalty;
 
-    // Get the lengths of the input sequences
-    int len_seq1 = sequence_len(NOM1_PAR_DEFAUT);
-    int len_seq2 = sequence_len(NOM2_PAR_DEFAUT);
-    
-
-    // Initialize the scoring matrix
-    int **score_matrix = initialize_matrix(len_seq1, len_seq2, 0);
-    
-    
-    // Fill the scoring matrix using the substitution matrix and gap penalty
-    int max_score = 0;
-    int max_i = 0;
-    int max_j = 0;
-    for (int i = 1; i <= len_seq1; i++) {
-        for (int j = 1; j <= len_seq2; j++) {
-            int match = score_matrix[i - 1][j - 1] + substitution_matrix[seq1[i - 1] - 'A'][seq2[j - 1] - 'A'];
-            int delete = score_matrix[i - 1][j] + gap_penalty;
-            int insert = score_matrix[i][j - 1] + gap_penalty;
-            score_matrix[i][j] = max(0, max(match, max(delete, insert)));
-            if (score_matrix[i][j] > max_score) {
-                max_score = score_matrix[i][j];
-                max_i = i;
-                max_j = j;
-            }
+            // Take maximum score among paths, or 0 if negative
+            max_score = match_score;
+            if (delete_score > max_score) max_score = delete_score;
+            if (insert_score > max_score) max_score = insert_score;
+            if (max_score < 0) max_score = 0;
+            
+            // Update score matrix
+            score_matrix[i][j] = max_score;
         }
     }
-
-    // Traceback to find the aligned sequences
-    *aligned_seq1 = (char*)malloc((max_i + max_j) * sizeof(char));
-    *aligned_seq2 = (char*)malloc((max_i + max_j) * sizeof(char));
-    int aligned_i = max_i;
-    int aligned_j = max_j;
-    int aligned_len = 0;
-    while (aligned_i > 0 && aligned_j > 0 && score_matrix[aligned_i][aligned_j] > 0) {
-        int current_score = score_matrix[aligned_i][aligned_j];
-        int diagonal_score = score_matrix[aligned_i - 1][aligned_j - 1];
-        int up_score = score_matrix[aligned_i - 1][aligned_j];
-        int left_score = score_matrix[aligned_i][aligned_j - 1];
-        if (current_score == diagonal_score + substitution_matrix[seq1[aligned_i - 1] - 'A'][seq2[aligned_j - 1] - 'A']) {
-            (*aligned_seq1)[aligned_len] = seq1[aligned_i - 1];
-            (*aligned_seq2)[aligned_len] = seq2[aligned_j - 1];
-            aligned_i--;
-            aligned_j--;
-        } else if (current_score == up_score + gap_penalty) {
-            (*aligned_seq1)[aligned_len] = seq1[aligned_i - 1];
-            (*aligned_seq2)[aligned_len] = '-';
-            aligned_i--;
-        } else {
-            (*aligned_seq1)[aligned_len] = '-';
-            (*aligned_seq2)[aligned_len] = seq2[aligned_j - 1];
-            aligned_j--;
-        }
-        aligned_len++;
-    }
-
-    // Reverse the aligned sequences
-    for (int k = 0; k < aligned_len / 2; k++) {
-        char temp = (*aligned_seq1)[k];
-        (*aligned_seq1)[k] = (*aligned_seq1)[aligned_len - 1];
-        (*aligned_seq1)[aligned_len - 1 - k] = temp;
-        temp = (*aligned_seq2)[k];
-        (*aligned_seq2)[k] = (*aligned_seq2)[aligned_len - 1 - k];
-        (*aligned_seq2)[aligned_len - 1 - k] = temp;
-    }
-
-    (*aligned_seq1)[aligned_len] = '\0'; 
-    (*aligned_seq2)[aligned_len] = '\0';
-    
-    for (int i = 0; i < len_seq1; i++) {
-        for (int j = 0; j < len_seq2; j++) {
+    printf("\nSuccesfully calculated the score matrix :\n");
+    for (int i = 0; i <= len1; i++) {
+        for (int j = 0; j <= len2; j++) {
             printf("%d ", score_matrix[i][j]);
         }
         printf("\n");
     }
-
-    /*
-    // Free the memory allocated for the scoring matrix
-    for (int i = 0; i <= len_seq1; i++) {
-        free(scores[i]);
-    }
-    free(scores);*/
-
-    return max_score; 
+    return score_matrix;
 }
+
 
 
 
@@ -374,34 +328,31 @@ void print_alignment(char* aligned_seq1, char* aligned_seq2){
     return 0;
 }*/
 
+           
 int main() {
-	char *seq1, *seq2, **aligned_seq1, **aligned_seq2;
-	int n, m, **substitution_matrix, **matrix;
-	
-    substitution_matrix = read_substitution_matrix("BLOSUM62.txt");
-	
-    seq1 = read_sequence(NOM1_PAR_DEFAUT);
-    seq2 = read_sequence(NOM2_PAR_DEFAUT);
-    
-    n = sequence_len(NOM1_PAR_DEFAUT);
-    m = sequence_len(NOM2_PAR_DEFAUT);
-    
-    matrix = initialize_matrix(n, m, 0);
+    char *seq1, *seq2;
+    int **substitution_matrix;
+    int gap_penalty = -2;
 
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < m; j++) {
-            printf("%d ", matrix[i][j]);
-        }
-        printf("\n");
-    }
+    // Read sequences and substitution matrix from files
+    seq1 = read_sequence("seq1.txt");
+    seq2 = read_sequence("seq2.txt");
+    substitution_matrix = read_substitution_matrix("BLOSUM62.txt");
     
-    printf("\n%d \n", compute_score("W","W",substitution_matrix));
-    
-    printf("\n%d \n",calculate_alignment(seq1, seq2, substitution_matrix, -1, aligned_seq1, aligned_seq2));
-    
+
+    // Fill score matrix using Smith-Waterman algorithm
+    int **score_matrix = fill_matrix(seq1, seq2, substitution_matrix, gap_penalty);
+
+
+
+    // Free memory
     free(seq1);
     free(seq2);
+    free(substitution_matrix[0]);
     free(substitution_matrix);
-    
+    free(score_matrix[0]);
+    free(score_matrix);
+
     return 0;
 }
+
