@@ -28,4 +28,4 @@ To test the algorithm:
 gcc -Wall projet.c -o pro ; ./pro <filename1> <filename2>
 `
 
-Where <filename1> and <filename2> are the .fasta files with sequences. Each file should include only one sequence.
+Where `<filename1>` and `<filename2>` are the .fasta files with sequences. Each file should include only one sequence.
