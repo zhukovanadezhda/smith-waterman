@@ -66,6 +66,23 @@ To test the program two web resources were used. One for the short examples with
 
 [Real alignments](https://www.ebi.ac.uk/Tools/psa/emboss_water/)
 
+#### Example 0: with equel example sequences
+
+```bash
+gcc -Wall projet.c -o pro ; ./pro examples/seq0.fasta examples/seq0.fasta
+```
+
+```
+Alignment score: 20
+Start position: 0, 0
+End position: 5, 5
+
+Alignment:
+
+AAAAA
+AAAAA
+```
+
 #### Example 1: with short example sequences
 
 ```bash
