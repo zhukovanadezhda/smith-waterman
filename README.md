@@ -30,9 +30,9 @@ git clone https://github.com/zhukovanadezhda/smith-waterman.git
 
 To test the algorithm:
 
-`
+```bash
 gcc -Wall projet.c -o pro ; ./pro <filename1> <filename2>
-`
+```
 
 Where `<filename1>` and `<filename2>` are the .fasta files with sequences. Each file should include only one sequence.
 
@@ -46,7 +46,9 @@ To test the program two web resources were used. One for the short examples with
 
 #### Example 1: with short example sequences
 
-`gcc -Wall projet.c -o pro ; ./pro examples/example1.fasta examples/example2.fasta`
+```bash
+gcc -Wall projet.c -o pro ; ./pro examples/example1.fasta examples/example2.fasta
+```
 
 ```
 Alignment score: 23
@@ -61,7 +63,9 @@ AW-HE
 
 #### Example 2: with sequences 1BTA and 1AKE
 
-`gcc -Wall projet.c -o pro ; ./pro examples/1AKE_1.fasta examples/1BTA_1.fasta`
+```bash
+gcc -Wall projet.c -o pro ; ./pro examples/1AKE_1.fasta examples/1BTA_1.fasta
+```
 
 ```
 Alignment score: 48
@@ -79,7 +83,9 @@ NGAESVLQVF
 
 #### Example 3: with sequences 1K5D and 1K5C
 
-`gcc -Wall projet.c -o pro ; ./pro examples/1K5D_3.fasta examples/1K5C_1.fasta`
+```bash
+gcc -Wall projet.c -o pro ; ./pro examples/1K5D_3.fasta examples/1K5C_1.fasta
+```
 
 ```
 Alignment score: 46
