@@ -40,7 +40,7 @@ To test the program two web resources were used. One for the short examples with
 
 #### Example 1: with short example sequences
 
-`gcc -Wall projet.c -o pro ; ./pro example1.fasta example2.fasta`
+`gcc -Wall projet.c -o pro ; ./pro examples/example1.fasta examples/example2.fasta`
 
 ```
 Alignment score: 23
@@ -55,7 +55,7 @@ AW-HE
 
 #### Example 2: with sequences 1BTA and 1AKE
 
-`gcc -Wall projet.c -o pro ; ./pro 1AKE_1.fasta 1BTA_1.fasta`
+`gcc -Wall projet.c -o pro ; ./pro examples/1AKE_1.fasta examples/1BTA_1.fasta`
 
 ```
 Alignment score: 48
@@ -73,7 +73,7 @@ NGAESVLQVF
 
 #### Example 3: with sequences 1K5D and 1K5C
 
-`gcc -Wall projet.c -o pro ; ./pro 1K5D_3.fasta 1K5C_1.fasta`
+`gcc -Wall projet.c -o pro ; ./pro examples/1K5D_3.fasta examples/1K5C_1.fasta`
 
 ```
 Alignment score: 46
