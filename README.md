@@ -22,6 +22,12 @@ Starting at the element with the highest score, traceback based on the source of
 
 In this project the Smith–Waterman algorithm was performed in C language.
 
+To clone the repository:
+
+```bash
+git clone https://github.com/zhukovanadezhda/smith-waterman.git
+```
+
 To test the algorithm:
 
 `
