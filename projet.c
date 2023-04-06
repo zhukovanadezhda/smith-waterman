@@ -1,3 +1,4 @@
+//////////////////////////////////////////////////////////////////////////////////////////////
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,8 +6,9 @@
 
 #define MAX_LINE_LENGTH 1000
 #define MATRIX_SIZE 24
+//////////////////////////////////////////////////////////////////////////////////////////////
 
-    
+//////////////////////////sequence_len////////////////////////////////////////////////////////   
 /*
  * Function:  sequence_len
  * ----------------------------------------
@@ -35,7 +37,7 @@ int sequence_len(char *filename) {
     
     while (fscanf(fr, "%c", &c) != EOF) {
         if (c == '>') {
-            while (fscanf(fr, "%c", &c) != EOF && c != '\n') {
+            while (fscanf(fr, "%c", &c) != EOF && c != '\n') { // skip the line
             }
         }
         else {
@@ -49,6 +51,10 @@ int sequence_len(char *filename) {
     fclose(fr);
     return n;    
 }
+
+
+//////////////////////////////////read_sequence//////////////////////////////////////////////  
+
 
 /*
  * Function:  read_sequence 
@@ -116,6 +122,9 @@ char *read_sequence(char *filename) {
 
     return t;
 }
+
+
+////////////////////////////////read_substitution_matrix///////////////////////////////  
 
 
 /*
@@ -202,6 +211,8 @@ int **read_substitution_matrix(char *filename) {
 }
 
 
+////////////////////////////////////initialize_matrix///////////////////////////////////////
+
 
 /*
  * Function:  initialize_matrix 
@@ -247,7 +258,26 @@ int **initialize_matrix(int n, int m, int value) {
 }
 
 
+///////////////////////////////////////compute_score/////////////////////////////////////////
 
+
+/*
+ * Function:  compute_score
+ * ----------------------------------------
+ *   Takes a substitution score from the substitution matrix
+ *	 for two given characters
+ *
+ *   Parameters:
+ *   
+ *     *a:                    a pointer to the first character 
+ *	   *b:                    a pointer to the second character 	
+ *     **substitution_matrix: a pointer to the substitution matrix 	  
+ *
+ * 	 Returns:
+ *     
+ *     score:  an integer representing the substitution score
+ *     
+ */
 int compute_score(char *a, char *b, int **substitution_matrix) {
     // Define the order of amino acids
     char amino_acids[] = "ARNDCQEGHILKMFPSTWYVBZX*";
@@ -276,6 +306,26 @@ int compute_score(char *a, char *b, int **substitution_matrix) {
 }
 
 
+///////////////////////////////////////fill_matrix/////////////////////////////////////////
+
+
+/*
+ * Function:  fill_matrix
+ * ----------------------------------------
+ *   Fills the score matrix with the score for each character
+ *
+ *   Parameters:
+ *   
+ *     *seq1:                 a pointer to the first sequence
+ *	   *seq2:                 a pointer to the second sequence 	
+ *     **substitution_matrix: a pointer to the substitution matrix 	 
+ *     gap_penalty:           an integer representing gap penalty
+ *
+ * 	 Returns:
+ *     
+ *     **score_matrix:        a pointer to the score matrix 	
+ *     
+ */
 int **fill_matrix(char *seq1, char *seq2, int **substitution_matrix, int gap_penalty) {
   
     // Get sequence lengths
@@ -315,6 +365,28 @@ int **fill_matrix(char *seq1, char *seq2, int **substitution_matrix, int gap_pen
 }
 
 
+///////////////////////////////////////calculate_alignment/////////////////////////////////////////
+
+
+/*
+ * Function:  calculate_alignment
+ * ----------------------------------------
+ *   Fills the score matrix with the score for each character
+ *
+ *   Parameters:
+ *   
+ *     *seq1:                 a pointer to the first sequence
+ *	   *seq2:                 a pointer to the second sequence 	
+ *     **substitution_matrix: a pointer to the substitution matrix 	 
+ *     gap_penalty:           an integer representing gap penalty
+  *    **aligned_seq1:        a pointer to the pointer of the first aligned sequence
+ *	   **aligned_seq2:        a pointer to the pointer of the second aligned sequence 
+ *
+ * 	 Returns:
+ *     
+ *     max_score:             an integer representing rhe alignment score 	
+ *     
+ */
 int calculate_alignment(char *seq1, char *seq2, int **substitution_matrix,
                          int gap_penalty, char **aligned_seq1, char **aligned_seq2) {
     int i, j;
@@ -397,6 +469,23 @@ int calculate_alignment(char *seq1, char *seq2, int **substitution_matrix,
     return max_score;
 }
 
+
+///////////////////////////////////////////print_seq///////////////////////////////////////////
+
+
+/*
+ * Function:  print_seq
+ * ----------------------------------------
+ *   Prints alignment with no more than 60 characters per line
+ *
+ *   Parameters:
+ *   
+ *     *seq1:                 a pointer to the first sequence
+ *	   *seq2:                 a pointer to the second sequence 	
+ *
+ * 	 Returns:	
+ *     
+ */
 void print_seq(char* seq1, char* seq2) {
     int len1 = strlen(seq1);
     int len2 = strlen(seq2);
@@ -423,7 +512,10 @@ void print_seq(char* seq1, char* seq2) {
     }
 }
 
-       
+
+///////////////////////////////////////main/////////////////////////////////////////
+
+      
 int main(int argc, char *argv[]) {
 
     if (argc != 3) {
