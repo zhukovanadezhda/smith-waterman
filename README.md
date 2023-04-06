@@ -20,8 +20,6 @@ Starting at the element with the highest score, traceback based on the source of
 
 ### Implementation
 
-In this project the Smith–Waterman algorithm was performed in C language.
-
 To clone the repository:
 
 ```bash
@@ -35,6 +33,30 @@ gcc -Wall projet.c -o pro ; ./pro <filename1> <filename2>
 ```
 
 Where `<filename1>` and `<filename2>` are the .fasta files with sequences. Each file should include only one sequence.
+
+
+In this project the Smith–Waterman algorithm was performed in C language.
+
+The following functions were used:
+
+`int sequence_len(char *filename)` - calculates the length of the sequence
+
+`char *read_sequence(char *filename)` - reads a sequence from the file
+
+`int **read_substitution_matrix(char *filename)` - reads substitution matrix from the file
+
+`int **initialize_matrix(int n, int m, int value)` - initializes a score matrix 
+
+`int compute_score(char *a, char *b, int **substitution_matrix)` - counts the score from the substitution matrix  
+
+`int **fill_matrix(char *seq1, char *seq2, int **substitution_matrix, int gap_penalty)` - fills the score matrix
+
+`int calculate_alignment(char *seq1, char *seq2, int **substitution_matrix, int gap_penalty, char **aligned_seq1, char **aligned_seq2)` - calculates th alignment score and the aligned sequences
+
+`void print_seq(char* seq1, char* seq2)` - prints alignment with no more than 60 charecters per line
+
+`int main(int argc, char *argv[])` - takes filenames as arguments and executes some of functions mentioned above
+
 
 ### Examples
 
