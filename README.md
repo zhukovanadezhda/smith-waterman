@@ -23,7 +23,7 @@ Starting at the element with the highest score, traceback based on the source of
 To clone the repository:
 
 ```bash
-git clone https://github.com/zhukovanadezhda/smith-waterman.git
+git clone git@github.com:zhukovanadezhda/smith-waterman.git
 ```
 
 To test the algorithm:
