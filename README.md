@@ -60,7 +60,7 @@ The following functions were used:
 
 ### Examples
 
-To test the program two web resources were used. One for the short examples with visualisation of the score matrix and another one is a real Smith–Waterman algorithm from EMBOSS to aligne real sequences.
+To test the program two web resources were used. One for the short examples with visualisation of the score matrix and another one is a real Smith–Waterman algorithm from EMBOSS to align real sequences.
 
 [Short alignments (<10)](https://gtuckerkellogg.github.io/pairwise/demo/)
 
